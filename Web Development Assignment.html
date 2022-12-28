@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script>
+        //1)HTML selection with a list of regions provided by the server-side script
+        $(function () {
+            $.get({
+                url: "https://www.cs.kent.ac.uk/people/staff/yh/co539-A1/countryData.php?regions",
+                success: function (data) {
+                    const i = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        $("select").append("<option value = '"+ data[i] +"''>" + data[i] + "</option>");
+                        
+                    }
+                },
+                dataType: 'json'
+            });
+            //2A + 2B) Gets the selected option and adds it the to the url to get the correct data and then appends said data to the table in a for loop. Also adds the populations together, increments the total countries and adds the countries language into an array in said for loop. Then the language array is looped through looking for the most repeated word which is then assigned to a variable and printed out.
+            $("select").change(function(){
+                const selectedItem = $(this).val();
+                let totalCountries = 0;
+                let averagePopulation = 0;
+                let languageArray = [];
+                let mMap = {};
+                let maxLan = languageArray[0], maxCount = 1;
+                let languageCount = 1;
+                $.get({
+                    url: "https://www.cs.kent.ac.uk/people/staff/yh/co539-A1/countryData.php?region=" + selectedItem,
+                    success: function (data) {
+                        const i = 0;
+                        $("#tbodyid").empty();
+                        $("p").empty();
+                        for(let i=0; i < data.length; i++){
+                            $("#tbodyid").append("<tr><td><img src = '" + data[i].flag + "' width='50' height='30'></td><td>" + data[i].name + "</td><td>" + data[i].capital + "</td><td>" + data[i].info.population + "</td><td>" + data[i].info.language + "</td></tr>");
+                            averagePopulation = averagePopulation + data[i].info.population;
+                            totalCountries++;
+                            languageArray.push(data[i].info.language);
+                        }
+                        $("body").append("<p> The Average Population is " + averagePopulation/totalCountries + " The Total Countries is " + totalCountries + "</p");
+                        for(let i=0; i < languageArray.length;i++){
+                            var Lan = languageArray[i];
+                            if(mMap[Lan]== null){
+                                mMap[Lan] = 1;
+                            } else{
+                                mMap[Lan]++;
+                            } if(mMap[Lan] > maxCount){
+                                maxLan = Lan;
+                                maxCount = mMap[Lan];
+                                languageCount++;
+
+                            }
+                        }
+                        $("body").append("<p> The popular language is  " + maxLan + " "+ languageCount +" countries use it</p>");
+
+                    },
+                    dataType: 'json'
+                });
+            }); 
+        });
+        //2C) Gets the search value and compares it to the region's request list and adds the matching ones to the table
+        function myFunction(){
+                const selectedItem = $("select").val();
+                let input = $("#search").val().toUpperCase();
+                console.log(input);
+                $("#tbodyid").empty();
+                $.get({
+                    url: "https://www.cs.kent.ac.uk/people/staff/yh/co539-A1/countryData.php?region=" + selectedItem,
+                    success: function (data) {
+                        for(let i=0; i < data.length; i++){
+                        let country = data[i].name.toUpperCase();
+                        let city = data[i].capital.toUpperCase();
+                        if(country.includes(input) || city.includes(input)){
+                            $("#tbodyid").append("<tr><td><img src = '" + data[i].flag + "' width='50' height='30'></td><td>" + data[i].name + "</td><td>" + data[i].capital + "</td><td>" + data[i].info.population + "</td><td>" + data[i].info.language + "</td></tr>");
+
+                        }
+                    }
+                    }
+                    
+                })
+            }
+            
+    </script>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<style>
+</style>
+
+<body>
+    <select>
+    </select>
+    <br>
+    <input type="text" id="search">
+    <button onclick="myFunction()">Search</button>
+    <table>
+        <tr>
+            <th>Flag</th>
+            <th>Name</th>
+            <th>Capital</th>
+            <th>Population</th>
+            <th>Language</th>
+        </tr>
+        <tbody id="tbodyid">
+        </tbody>
+    </table>
+</body>
+
+</html>
